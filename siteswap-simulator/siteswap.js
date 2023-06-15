@@ -11,7 +11,10 @@ let beatLength; // length in milliseconds
 let gravity;
 
 const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-const examples = ["534","12345","441","3","4","5","6","7","744","633","1357","51","17","53","423","525","50505","5551","7131","561","4453","612","73","312","531","61616","663","5241","5313","5524","7333","7571","45141","52512","56414"];
+const asyncExamples = ["534","12345","441","3","4","5","6","7","744","633","1357","51","17","53","423","525","50505","5551","7131","561","4453","612","73","312","531","61616","663","5241","5313","5524","7333","7571","45141","52512","56414"];
+const syncExamples = ["(2x,4x)","(4,2x)(2x,4)","(4,4)","(4,4)(4x,0)(4,4)(0,4x)","(4,6x)(2x,4)","(4x,2x)","(4x,2x)(4,2x)(2x,4x)(2x,4)","(4x,4x)","(4x,6)(6,4x)","(6,4x)(4x,2)","(6x,2x)","(6x,2x)(2x,6x)","(6x,4)(4,2x)(4,6x)(2x,4)","(6x,4)(4,6x)","(6x,4x)","(6x,6x)(2x,2x)","(2x,2x)","(8,2x)(4,2x)(2x,8)(2x,4)"];
+const examples = asyncExamples.concat(syncExamples);
+
 
 function mod(n, m) {
     return ((n % m) + m) % m;
@@ -119,7 +122,7 @@ function checkThrow(ballThrow, multiplexAllowed, sync) {
     } else { //normal throw
         if (ballThrow.length == 1) {
             let index = alphabet.indexOf(ballThrow);
-            if (!sync || index%2 == 0) { //sync throws must be an even number of beats
+            if (!sync || index%2 == 0) { //sync throws must be an even number of beats);
                 return index;
             }
         } else if (sync && ballThrow.length == 2 && ballThrow[1] == "x" && alphabet.includes(ballThrow[0]) ) {
@@ -149,7 +152,7 @@ function checkSiteswap(siteswap) { //returns a list of all the throws, or an emp
     if (siteswap.startsWith("(")) { //synchronous
         let pairs = siteswap.split("(");
         let numList = [];
-        let shifted = [];
+        let slided = [];
         for (let i = 1; i < pairs.length; i++) {
             let splitPair = pairs[i].slice(0,-1).split(",")
             if (splitPair.length != 2) {
@@ -167,12 +170,12 @@ function checkSiteswap(siteswap) { //returns a list of all the throws, or an emp
         }
         for (let i = 0; i < numList.length; i++) {
             if (numList[i] >= 0) {
-                shifted.push(numList[i])
+                slided.push(numList[i])
             } else { //dealing with crossing throws
-                shifted.push(-1*numList[i] - 2*(i%2) + 1)
+                slided.push(-1*numList[i] - 2*(i%2) + 1)
             }
         }
-        if (isValidVanillaSiteswap(shifted)) {
+        if (isValidVanillaSiteswap(slided)) {
             return numList;
         } else {
             return [];
