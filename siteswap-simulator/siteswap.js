@@ -9,6 +9,8 @@ let animationOngoing = false;
 let beatLength; // length in milliseconds
 let gravity;
 
+const alphabet = "abcdefghijklmnopqrstuvwxyz";
+
 function getJuggler(workingHeight) {
     return {
         headSize: workingHeight*0.15,
@@ -82,12 +84,16 @@ function checkSiteswap() {
     let total = 0;
     let numList = []
     for (let i = 0; i < text.length; i++) {
-        if (isNaN(parseInt(text[i]))) {
-            return [];
-        } else {
-            total += parseInt(text[i]);
-            numList.push(parseInt(text[i]));
+        let index = alphabet.indexOf(text[i])
+        let newNum = parseInt(text[i]);
+        if (index != -1) {
+            newNum = 10+index;
         }
+        else if (isNaN(newNum)) {
+            return [];
+        }
+        total += newNum;
+        numList.push(newNum);
     }
     // perform vanilla siteswap test
     let sums = []
