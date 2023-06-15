@@ -1,3 +1,10 @@
 #canvas {
-    border: solid 1px
+    border: solid 1px;
+}
+#sliders-div {
+    margin-left: 20px;
+}
+#wrapper > * {
+    display: inline-block;
+    vertical-align: middle;
 }

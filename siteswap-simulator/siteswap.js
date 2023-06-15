@@ -2,6 +2,7 @@ const HEIGHT = 600;
 const WIDTH = 600;
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
+let animationOngoing = false;
 
 const BEAT_LENGTH = 500 // length in milliseconds
 let gravity = 0.2;
@@ -85,19 +86,42 @@ function checkSiteswap() {
             numList.push(parseInt(text[i]));
         }
     }
+    // perform vanilla siteswap test
+    let sums = []
+    for (let i = 0; i < numList.length; i++) {
+        let sum = (numList[i]+i)%numList.length
+        if (sums.includes(sum)) {
+            return []; // two balls are landing in the same hand at the same time
+        } else {
+            sums.push(sum);
+        }
+    }
     if (total%text.length == 0) {
         return numList;
+    } else {
+        return [];
     }
+}
+
+function showInvalidSiteSwap() {
+    ctx.clearRect(0,0,WIDTH,HEIGHT)
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.fillText("Invalid Siteswap", WIDTH*0.5 - ctx.measureText("Invalid Siteswap").width*0.5, HEIGHT*0.5);
 }
 
 document.getElementById("siteswap-button").onclick = () => {
     startingTime = performance.now();
-    siteswap = checkSiteswap()
+    siteswap = checkSiteswap();
     let juggler = getJuggler(200)
     if (siteswap.length != 0) {
-        window.requestAnimationFrame((timeStamp) => {
+        animationOngoing = true;
+        requestId = window.requestAnimationFrame((timeStamp) => {
             doStuff(juggler, siteswap, timeStamp, startingTime);
         });
+    } else {
+        animationOngoing = false;
+        showInvalidSiteSwap();
     }
 }
 
@@ -127,14 +151,16 @@ function drawSiteswap(juggler, siteswap, beats) {
 }
 
 function doStuff(juggler, siteswap, timeStamp, startingTime) {
-    ctx.clearRect(0,0,WIDTH,HEIGHT)
-    let currentTime = timeStamp-startingTime;
-    let beats = currentTime/BEAT_LENGTH;
-    let leftRotation = getRotation(beats,0.5);
-    let rightRotation = getRotation(beats,1.5);
-    drawPerson(juggler,leftRotation,rightRotation);
-    drawSiteswap(juggler, siteswap, beats)
-    window.requestAnimationFrame((timeStamp) => {
-        doStuff(juggler, siteswap, timeStamp, startingTime);
-    });
+    if (animationOngoing) {
+        ctx.clearRect(0,0,WIDTH,HEIGHT)
+        let currentTime = timeStamp-startingTime;
+        let beats = currentTime/BEAT_LENGTH;
+        let leftRotation = getRotation(beats,0.5);
+        let rightRotation = getRotation(beats,1.5);
+        drawPerson(juggler,leftRotation,rightRotation);
+        drawSiteswap(juggler, siteswap, beats)
+        window.requestAnimationFrame((timeStamp) => {
+            doStuff(juggler, siteswap, timeStamp, startingTime);
+        });
+    }
 }
