@@ -68,7 +68,7 @@ function drawBall(juggler, startingHand, beats, progress) {
         y = juggler.handY(progress*2 * Math.PI - Math.PI);
     } else {
         x = juggler.elbowX + juggler.armLength + (progress - 0.5)/(beats-0.5)*(travelDist);
-        y = juggler.elbowY + juggler.height*gravity*(progress - 0.5)*(progress-beats);
+        y = juggler.elbowY + juggler.height*(gravity*beatLength)*(progress - 0.5)*(progress-beats);
     }
     if (startingHand === "right") {
         x = WIDTH-x;
@@ -107,7 +107,7 @@ function checkSiteswap() {
 }
 
 function calcIdealWorkingHeight(maxThrow) {
-    return Math.min(590,(10-HEIGHT)/(-0.25 + gravity*((maxThrow-0.5)/2)*(-maxThrow/2 + 0.25)));
+    return Math.min(590,(10-HEIGHT)/(-0.25 + (gravity*beatLength)*((maxThrow-0.5)/2)*(-maxThrow/2 + 0.25)));
 }
 
 function showInvalidSiteSwap() {
@@ -132,13 +132,6 @@ document.getElementById("siteswap-button").onclick = () => {
     }
 };
 
-gravitySlider.onchange = () => {
-    let newGravity = gravitySlider.value * 0.1;
-    document.getElementById("gravity-text").textContent = "Gravity: " + newGravity.toPrecision(1);
-    gravity = newGravity;
-    document.getElementById("siteswap-button").onclick();
-};
-gravitySlider.onchange();
 beatSlider.onchange = () => {
     let newBeatLength = beatSlider.value * 100;
     document.getElementById("beat-text").textContent = "Beat length: " + newBeatLength;
@@ -146,6 +139,13 @@ beatSlider.onchange = () => {
     document.getElementById("siteswap-button").onclick();
 };
 beatSlider.onchange();
+gravitySlider.onchange = () => {
+    let newGravity = gravitySlider.value * 0.0002;
+    document.getElementById("gravity-text").textContent = "Gravity: " + (newGravity*1000).toPrecision(2);
+    gravity = newGravity;
+    document.getElementById("siteswap-button").onclick();
+};
+gravitySlider.onchange();
 
 function getRotation(beats,start) {
     if ((beats+start)%2 < 1.5) {
