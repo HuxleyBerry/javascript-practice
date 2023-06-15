@@ -2,10 +2,12 @@ const HEIGHT = 600;
 const WIDTH = 600;
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
+let gravitySlider = document.getElementById("gravity-slider");
+let beatSlider = document.getElementById("beat-slider");
 let animationOngoing = false;
 
-const BEAT_LENGTH = 500 // length in milliseconds
-let gravity = 0.2;
+let beatLength; // length in milliseconds
+let gravity;
 
 function getJuggler(workingHeight) {
     return {
@@ -17,6 +19,7 @@ function getJuggler(workingHeight) {
         hipY: HEIGHT-workingHeight*0.1,
         elbowX: WIDTH*0.5 - workingHeight*0.3,
         elbowY: HEIGHT-workingHeight*0.2,
+
         ballSize: workingHeight*0.05,
         crossingTravelDist: workingHeight*0.6,
         sameTravelDist: workingHeight*0.3,
@@ -103,6 +106,10 @@ function checkSiteswap() {
     }
 }
 
+function calcIdealWorkingHeight(maxThrow) {
+    return Math.min(590,(10-HEIGHT)/(-0.25 + gravity*((maxThrow-0.5)/2)*(-maxThrow/2 + 0.25)));
+}
+
 function showInvalidSiteSwap() {
     ctx.clearRect(0,0,WIDTH,HEIGHT)
     ctx.fillStyle = "black";
@@ -113,7 +120,7 @@ function showInvalidSiteSwap() {
 document.getElementById("siteswap-button").onclick = () => {
     startingTime = performance.now();
     siteswap = checkSiteswap();
-    let juggler = getJuggler(200)
+    let juggler = getJuggler(calcIdealWorkingHeight(Math.max(...siteswap)));
     if (siteswap.length != 0) {
         animationOngoing = true;
         requestId = window.requestAnimationFrame((timeStamp) => {
@@ -123,7 +130,22 @@ document.getElementById("siteswap-button").onclick = () => {
         animationOngoing = false;
         showInvalidSiteSwap();
     }
-}
+};
+
+gravitySlider.onchange = () => {
+    let newGravity = gravitySlider.value * 0.1;
+    document.getElementById("gravity-text").textContent = "Gravity: " + newGravity.toPrecision(1);
+    gravity = newGravity;
+    document.getElementById("siteswap-button").onclick();
+};
+gravitySlider.onchange();
+beatSlider.onchange = () => {
+    let newBeatLength = beatSlider.value * 100;
+    document.getElementById("beat-text").textContent = "Beat length: " + newBeatLength;
+    beatLength = newBeatLength;
+    document.getElementById("siteswap-button").onclick();
+};
+beatSlider.onchange();
 
 function getRotation(beats,start) {
     if ((beats+start)%2 < 1.5) {
@@ -154,7 +176,7 @@ function doStuff(juggler, siteswap, timeStamp, startingTime) {
     if (animationOngoing) {
         ctx.clearRect(0,0,WIDTH,HEIGHT)
         let currentTime = timeStamp-startingTime;
-        let beats = currentTime/BEAT_LENGTH;
+        let beats = currentTime/beatLength;
         let leftRotation = getRotation(beats,0.5);
         let rightRotation = getRotation(beats,1.5);
         drawPerson(juggler,leftRotation,rightRotation);
