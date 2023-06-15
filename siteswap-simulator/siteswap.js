@@ -4,12 +4,14 @@ let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 let gravitySlider = document.getElementById("gravity-slider");
 let beatSlider = document.getElementById("beat-slider");
+let siteswapButton = document.getElementById("siteswap-button");
 let animationOngoing = false;
 
 let beatLength; // length in milliseconds
 let gravity;
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz";
+const examples = ["534","12345","441","3","4","5","6","7","744","633","1357","51","17","53","423","525","50505","5551","7131","561","4453","612","73","312","531","61616","663","5241","5313","5524","7333","7571","45141","52512","56414"];
 
 function getJuggler(workingHeight) {
     return {
@@ -123,7 +125,7 @@ function showInvalidSiteSwap() {
     ctx.fillText("Invalid Siteswap", WIDTH*0.5 - ctx.measureText("Invalid Siteswap").width*0.5, HEIGHT*0.5);
 }
 
-document.getElementById("siteswap-button").onclick = () => {
+siteswapButton.onclick = () => {
     startingTime = performance.now();
     siteswap = checkSiteswap();
     let juggler = getJuggler(calcIdealWorkingHeight(Math.max(...siteswap)));
@@ -142,16 +144,21 @@ beatSlider.onchange = () => {
     let newBeatLength = beatSlider.value * 100;
     document.getElementById("beat-text").textContent = "Beat length: " + newBeatLength;
     beatLength = newBeatLength;
-    document.getElementById("siteswap-button").onclick();
+    siteswapButton.onclick();
 };
 beatSlider.onchange();
 gravitySlider.onchange = () => {
     let newGravity = gravitySlider.value * 0.0002;
     document.getElementById("gravity-text").textContent = "Gravity: " + (newGravity*1000).toPrecision(2);
     gravity = newGravity;
-    document.getElementById("siteswap-button").onclick();
+    siteswapButton.onclick();
 };
 gravitySlider.onchange();
+
+document.getElementById("example-button").onclick = () => {
+    document.getElementById("siteswap-input").value = examples[Math.floor(Math.random()*examples.length)]
+    siteswapButton.onclick();
+};
 
 function getRotation(beats,start) {
     if ((beats+start)%2 < 1.5) {
