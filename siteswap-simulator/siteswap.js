@@ -141,7 +141,6 @@ function checkThrow(ballThrow, multiplexAllowed, sync) {
     }
 }
 
-
 function parseSiteswap(siteswap) { //returns a list of all the throws, or an empty list if the siteswap string is invalid
     if (siteswap.startsWith("(")) { //synchronous
         let pairs = siteswap.split("(");
@@ -156,7 +155,7 @@ function parseSiteswap(siteswap) { //returns a list of all the throws, or an emp
             } else {
                 let throw1 = checkThrow(splitPair[0], true, true);
                 let throw2 = checkThrow(splitPair[1], true, true);
-                if (throw1 != [] && throw2 != []) {
+                if (throw1.length != 0 && throw2.length != 0) {
                     numList.push(throw1);
                     numList.push(throw2);
                 } else {
@@ -179,7 +178,7 @@ function parseSiteswap(siteswap) { //returns a list of all the throws, or an emp
                 i = closingIndex;
             }
             let parsedThrow = checkThrow(ballThrow, true, false);
-            if (parsedThrow != []) {
+            if (parsedThrow.length != 0) {
                 numList.push(parsedThrow);
             }
             else {
@@ -208,7 +207,6 @@ function checkSiteswap(siteswap, sync) {
             }
         });
     }
-    console.log(catchesEachBeat);
     for (let i = 0; i < beats; i++) {
         if (siteswap[i].length !== catchesEachBeat[i]) {
             return false;
