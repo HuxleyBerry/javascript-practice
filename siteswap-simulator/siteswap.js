@@ -147,6 +147,9 @@ function parseSiteswap(siteswap) { //returns a list of all the throws, or an emp
         let pairs = siteswap.split("(");
         let numList = [];
         for (let i = 1; i < pairs.length; i++) {
+            if (!pairs[i].endsWith(")")) {
+                return [];
+            }
             let splitPair = pairs[i].slice(0,-1).split(",")
             if (splitPair.length != 2) {
                 return [];
