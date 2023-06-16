@@ -5,15 +5,21 @@ let ctx = canvas.getContext("2d");
 let gravitySlider = document.getElementById("gravity-slider");
 let beatSlider = document.getElementById("beat-slider");
 let siteswapButton = document.getElementById("siteswap-button");
+
 let animationOngoing = false;
+let startingTime;
+let globalJuggler;
+let globalSiteswap;
+let globalSync;
 
 let beatLength; // length in milliseconds
 let gravity;
 
 const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 const asyncExamples = ["534","12345","441","3","4","5","6","7","744","633","1357","51","17","53","423","525","50505","5551","7131","561","4453","612","73","312","531","61616","663","5241","5313","5524","7333","7571","45141","52512","56414"];
-const syncExamples = ["(2x,4x)","(4,2x)(2x,4)","(4,4)","(4,4)(4x,0)(4,4)(0,4x)","(4,6x)(2x,4)","(4x,2x)","(4x,2x)(4,2x)(2x,4x)(2x,4)","(4x,4x)","(4x,6)(6,4x)","(6,4x)(4x,2)","(6x,2x)","(6x,2x)(2x,6x)","(6x,4)(4,2x)(4,6x)(2x,4)","(6x,4)(4,6x)","(6x,4x)","(6x,6x)(2x,2x)","(2x,2x)","(8,2x)(4,2x)(2x,8)(2x,4)"];
-const examples = asyncExamples.concat(syncExamples);
+const syncExamples = ["(2x,4x)","(4,2x)(2x,4)","(4,4)","(4,4)(4x,0)(4,4)(0,4x)","(4,6x)(2x,4)","(4x,2x)","(4x,2x)(4,2x)(2x,4x)(2x,4)","(4x,4x)","(4x,6)(6,4x)","(6,4x)(4x,2)","(6x,2x)","(6x,2x)(2x,6x)","(6x,4)(4,2x)(4,6x)(2x,4)","(6x,4)(4,6x)","(6x,4x)","(6x,6x)(2x,2x)","(2x,2x)","(8,2x)(4,2x)(2x,8)(2x,4)","(4,4x)(4x,4)"];
+const multiplexExamples = ["[54]24","[43]1421","4[43]1","[32]"];
+const examples = asyncExamples.concat(syncExamples, multiplexExamples);
 
 
 function mod(n, m) {
@@ -97,22 +103,22 @@ function drawBall(juggler, startingHand, ballThrow, progress) {
 
 function checkThrow(ballThrow, multiplexAllowed, sync) { 
     // checks if a string is a valid representation of a single-handed throw. 
-    // returns -1 if invalid
+    // returns an empty array if invalid
     if (ballThrow[0] == "[") { //multiplex
         if (!multiplexAllowed || ballThrow[ballThrow.length - 1] != "]") {
-            return -1;
+            return [];
         } else {
             let throwsList = [];
             for (let i = 1; i < ballThrow.length-1; i++) { //start at 1 and end at length-1 to ignore the square brackets
                 let res;
                 if (ballThrow[i+1] == "x") {
-                    res = checkThrow(ballThrow.slice(i,i+2), false, sync);
+                    res = checkThrow(ballThrow.slice(i,i+2), false, sync)[0];
                     i++; //skip the "x"
                 } else {
-                    res = checkThrow(ballThrow[i], false, sync);
+                    res = checkThrow(ballThrow[i], false, sync)[0];
                 }
                 if (res == -1) {
-                    return -1;
+                    return [];
                 } else {
                     throwsList.push(res);
                 }
@@ -122,45 +128,32 @@ function checkThrow(ballThrow, multiplexAllowed, sync) {
     } else { //normal throw
         if (ballThrow.length == 1) {
             let index = alphabet.indexOf(ballThrow);
-            if (!sync || index%2 == 0) { //sync throws must be an even number of beats);
-                return index;
+            if (index != -1 && (!sync || index%2 == 0)) { //sync throws must be an even number of beats);
+                return [index];
             }
         } else if (sync && ballThrow.length == 2 && ballThrow[1] == "x" && alphabet.includes(ballThrow[0]) ) {
-            let index = alphabet.indexOf(ballThrow[0])
+            let index = alphabet.indexOf(ballThrow[0]);
             if (index%2 == 0 && index > 0) { //crossing sync throws must be an even nonzero number of beats
-                return -1*index; // negative numbers are used to indicate crossing throws
+                return [-1*index]; // negative numbers are used to indicate crossing throws
             }
         } 
-        return -1;
+        return [];
     }
 }
 
-function isValidVanillaSiteswap(numList) {
-    let sums = []
-    for (let i = 0; i < numList.length; i++) {
-        let sum = (numList[i]+i)%numList.length
-        if (sums.includes(sum)) {
-            return false; // two balls are landing in the same hand at the same time
-        } else {
-            sums.push(sum);
-        }
-    }
-    return true;
-}
 
-function checkSiteswap(siteswap) { //returns a list of all the throws, or an empty list if the siteswap string is invalid
+function parseSiteswap(siteswap) { //returns a list of all the throws, or an empty list if the siteswap string is invalid
     if (siteswap.startsWith("(")) { //synchronous
         let pairs = siteswap.split("(");
         let numList = [];
-        let slided = [];
         for (let i = 1; i < pairs.length; i++) {
             let splitPair = pairs[i].slice(0,-1).split(",")
             if (splitPair.length != 2) {
                 return [];
             } else {
-                let throw1 = checkThrow(splitPair[0], false, true); //NOTE: need to change multiplexAllowed to true at some point
-                let throw2 = checkThrow(splitPair[1], false, true);
-                if (throw1 != -1 && throw2 != -1) {
+                let throw1 = checkThrow(splitPair[0], true, true);
+                let throw2 = checkThrow(splitPair[1], true, true);
+                if (throw1 != [] && throw2 != []) {
                     numList.push(throw1);
                     numList.push(throw2);
                 } else {
@@ -168,14 +161,7 @@ function checkSiteswap(siteswap) { //returns a list of all the throws, or an emp
                 }
             }
         }
-        for (let i = 0; i < numList.length; i++) {
-            if (numList[i] >= 0) {
-                slided.push(numList[i])
-            } else { //dealing with crossing throws
-                slided.push(-1*numList[i] - 2*(i%2) + 1)
-            }
-        }
-        if (isValidVanillaSiteswap(slided)) {
+        if (checkSiteswap(numList, true)) {
             return numList;
         } else {
             return [];
@@ -183,24 +169,67 @@ function checkSiteswap(siteswap) { //returns a list of all the throws, or an emp
     } else { //asynchronous
         let numList = [];
         for (let i = 0; i < siteswap.length; i++) {
-            let parsedThrow = checkThrow(siteswap[i], false, false)
-            if (parsedThrow != -1) {
+            let ballThrow = siteswap[i];
+            if (ballThrow === "[") { //dealing with a multiplex
+                let closingIndex = siteswap.indexOf("]",i);
+                ballThrow = siteswap.slice(i,closingIndex+1);
+                i = closingIndex;
+            }
+            let parsedThrow = checkThrow(ballThrow, true, false);
+            if (parsedThrow != []) {
                 numList.push(parsedThrow);
             }
             else {
                 return [];
             }
         }
-        if (isValidVanillaSiteswap(numList)) {
+        if (checkSiteswap(numList, false)) {
             return numList;
         } else {
             return [];
         }
     }
 }
+
+//TODO: fix checking for sync siteswaps. E.g. (4,2)(2,4)
+function checkSiteswap(siteswap, sync) { 
+    let beats = siteswap.length;
+    if (sync && beats%2 == 1) throw "Error: somehow sync siteswap has odd number of throws!";
+    let catchesEachBeat = Array(beats).fill(0);
+    for (let i = 0; i < beats; i++) {
+        siteswap[i].forEach(ball => {
+            catchesEachBeat[(i+Math.abs(ball))%beats] += 1;
+        });
+        if (sync) {
+            siteswap[i+1].forEach(ball => {
+                catchesEachBeat[(i+Math.abs(ball))%beats] += 1;
+            });
+            i++;
+        }
+    }
+    for (let i = 0; i < beats; i++) {
+        if (sync) {
+            if (siteswap[i].length + siteswap[i+1].length !== catchesEachBeat[i]) {
+                return false;
+            }
+            i++;
+        } else {
+            if (siteswap[i].length !== catchesEachBeat[i]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function getMaxThrow(siteswap) {
+    let flattened = [].concat(...siteswap);
+    let positiveSiteswap = flattened.map(x => Math.abs(x));
+    return Math.max(...positiveSiteswap);
+}
+
 function calcIdealWorkingHeight(siteswap) {
-    let positiveSiteswap = siteswap.map(x => Math.abs(x));
-    let maxThrow = Math.max(...positiveSiteswap);
+    let maxThrow = getMaxThrow(siteswap);
     return Math.min(590,(10-HEIGHT)/(-0.25 + (gravity*beatLength)*((maxThrow-0.5)/2)*(-maxThrow/2 + 0.25)));
 }
 
@@ -212,16 +241,14 @@ function showInvalidSiteSwap() {
 }
 
 siteswapButton.onclick = () => {
-    let startingTime = performance.now();
+    startingTime = performance.now();
     let inputSiteswap = document.getElementById("siteswap-input").value;
-    let sync = inputSiteswap.startsWith("(");
-    let siteswap = checkSiteswap(inputSiteswap);
-    let juggler = getJuggler(calcIdealWorkingHeight(siteswap));
-    if (siteswap.length != 0) {
+    globalSync = inputSiteswap.startsWith("(");
+    globalSiteswap = parseSiteswap(inputSiteswap);
+    globalJuggler = getJuggler(calcIdealWorkingHeight(globalSiteswap));
+    if (globalSiteswap.length != 0) {
         animationOngoing = true;
-        requestId = window.requestAnimationFrame((timeStamp) => {
-            doStuff(juggler, siteswap, sync, timeStamp, startingTime);
-        });
+        window.requestAnimationFrame(doStuff);
     } else {
         animationOngoing = false;
         showInvalidSiteSwap();
@@ -257,19 +284,21 @@ function getRotation(beats,start) {
 }
 
 function drawAsyncSiteswap(juggler, siteswap, beats) {
-    let maxThrowSize = Math.max(...siteswap); //amount of beats we need to backtrack
+    let maxThrowSize = getMaxThrow(siteswap); //amount of beats we need to backtrack
     for (let i = 0; i < maxThrowSize; i++) {
-        let hand, throwHeight, progress;
+        let hand, throwHeights, progress;
         if ((Math.floor(beats)-i)%2 != 0) {
             hand = "left";
         } else {
             hand = "right";
         }
-        throwHeight = siteswap[mod(Math.floor(beats)-i-1,siteswap.length)];
         progress = beats%1 + i;
-        if (progress <= throwHeight) {
-            drawBall(juggler, hand, throwHeight, progress);					
-        }
+        throwHeights = siteswap[mod(Math.floor(beats)-i-1,siteswap.length)];
+        throwHeights.forEach((height) => {
+            if (progress <= height) {
+                drawBall(juggler, hand, height, progress);					
+            }
+        });
     }
 }
 
@@ -291,27 +320,25 @@ function drawSyncSiteswap(juggler, siteswap, beats) {
     }
 }
 
-function doStuff(juggler, siteswap, sync, timeStamp, startingTime) {
+function doStuff(timeStamp) {
     if (animationOngoing) {
         ctx.clearRect(0,0,WIDTH,HEIGHT)
         let currentTime = timeStamp-startingTime;
         let beats = currentTime/beatLength;
         let leftRotation, rightRotation;
-        if (sync) {
+        if (globalSync) {
             leftRotation = getRotation(beats,1.5);
             rightRotation = getRotation(beats,1.5);
         } else {
             leftRotation = getRotation(beats,0.5);
             rightRotation = getRotation(beats,1.5);
         }
-        drawPerson(juggler,leftRotation,rightRotation);
-        if (sync) {
-            drawSyncSiteswap(juggler, siteswap, beats)
+        drawPerson(globalJuggler,leftRotation,rightRotation);
+        if (globalSync) {
+            drawSyncSiteswap(globalJuggler, globalSiteswap, beats)
         } else {
-            drawAsyncSiteswap(juggler, siteswap, beats)
+            drawAsyncSiteswap(globalJuggler, globalSiteswap, beats)
         }
-        window.requestAnimationFrame((timeStamp) => {
-            doStuff(juggler, siteswap, sync, timeStamp, startingTime);
-        });
+        window.requestAnimationFrame(doStuff);
     }
 }
