@@ -18,7 +18,7 @@ let gravity;
 const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 const asyncExamples = ["534","12345","441","3","4","5","6","7","744","633","1357","51","17","53","423","525","50505","5551","7131","561","4453","612","73","312","531","61616","663","5241","5313","5524","7333","7571","45141","52512","56414"];
 const syncExamples = ["(2x,4x)","(4,2x)(2x,4)","(4,4)","(4,4)(4x,0)(4,4)(0,4x)","(4,6x)(2x,4)","(4x,2x)","(4x,2x)(4,2x)(2x,4x)(2x,4)","(4x,4x)","(4x,6)(6,4x)","(6,4x)(4x,2)","(6x,2x)","(6x,2x)(2x,6x)","(6x,4)(4,2x)(4,6x)(2x,4)","(6x,4)(4,6x)","(6x,4x)","(6x,6x)(2x,2x)","(2x,2x)","(8,2x)(4,2x)(2x,8)(2x,4)","(4,4x)(4x,4)"];
-const multiplexExamples = ["[54]24","[43]1421","4[43]1","[32]"];
+const multiplexExamples = ["[54]24","[43]1421","4[43]1","[32]","[43]23"];
 const examples = asyncExamples.concat(syncExamples, multiplexExamples);
 
 
@@ -307,16 +307,19 @@ function drawSyncSiteswap(juggler, siteswap, beats) {
     let positiveSiteswap = siteswap.map(x => Math.abs(x));
     let maxThrowSize = Math.max(...positiveSiteswap); //amount of beats we need to backtrack
     for (let i = 0; i < maxThrowSize; i += 2) {
-        let leftThrowHeight = siteswap[mod(Math.floor(beats*0.5)*2-i-1,siteswap.length)];
-        let rightThrowHeight = siteswap[mod(Math.floor(beats*0.5)*2-i-2,siteswap.length)];
-        let leftProgress = beats%2 + i;
-        let rightProgress = beats%2 + i;
-        if (leftProgress <= Math.abs(leftThrowHeight)) {
-            drawBall(juggler, "left", leftThrowHeight, leftProgress);					
-        }
-        if (rightProgress <= Math.abs(rightThrowHeight)) {
-            drawBall(juggler, "right", rightThrowHeight, rightProgress);					
-        }
+        let progress = beats%2 + i;
+        let leftThrowHeights = siteswap[mod(Math.floor(beats*0.5)*2-i-1,siteswap.length)];
+        let rightThrowHeights = siteswap[mod(Math.floor(beats*0.5)*2-i-2,siteswap.length)];
+        leftThrowHeights.forEach((height) => {
+            if (progress <= Math.abs(height)) {
+                drawBall(juggler, "left", height, progress);					
+            }
+        });
+        rightThrowHeights.forEach((height) => {
+            if (progress <= Math.abs(height)) {
+                drawBall(juggler, "right", height, progress);					
+            }
+        });
     }
 }
 
