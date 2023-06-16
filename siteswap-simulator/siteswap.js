@@ -18,7 +18,7 @@ let gravity;
 const alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 const asyncExamples = ["534","12345","441","3","4","5","6","7","744","633","1357","51","17","53","423","525","50505","5551","7131","561","4453","612","73","312","531","61616","663","5241","5313","5524","7333","7571","45141","52512","56414"];
 const syncExamples = ["(2x,4x)","(4,2x)(2x,4)","(4,4)","(4,4)(4x,0)(4,4)(0,4x)","(4,6x)(2x,4)","(4x,2x)","(4x,2x)(4,2x)(2x,4x)(2x,4)","(4x,4x)","(4x,6)(6,4x)","(6,4x)(4x,2)","(6x,2x)","(6x,2x)(2x,6x)","(6x,4)(4,2x)(4,6x)(2x,4)","(6x,4)(4,6x)","(6x,4x)","(6x,6x)(2x,2x)","(2x,2x)","(8,2x)(4,2x)(2x,8)(2x,4)"];
-const multiplexExamples = ["[54]24","[43]1421","4[43]1","[32]","[43]23","[43][32]3","[31]","(2,4)([4x4],2x)","(2,4x)([4x4],2)"];
+const multiplexExamples = ["[54]24","[43]1421","4[43]1","[32]","[43]23","[43][32]3","[31]","(2,4)([4x4],2x)","(2,4x)([4x4],2)","(2,6)([6x6],2x)(6x,2x)"];
 const examples = asyncExamples.concat(syncExamples, multiplexExamples);
 
 
@@ -202,12 +202,13 @@ function checkSiteswap(siteswap, sync) {
         siteswap[i].forEach(ball => {
             if (ball < 0) {
                 let adjustment = -2*(i%2) + 1;
-                catchesEachBeat[mod(i+ball+adjustment,beats)] += 1;
+                catchesEachBeat[mod(i-ball+adjustment,beats)] += 1; //subtracting ball since it is stored as a negative number
             } else {
                 catchesEachBeat[(i+ball)%beats] += 1;
             }
         });
     }
+    console.log(catchesEachBeat);
     for (let i = 0; i < beats; i++) {
         if (siteswap[i].length !== catchesEachBeat[i]) {
             return false;
