@@ -1,1 +1,1 @@
-# javascript-practice
+# siteswap simulator
