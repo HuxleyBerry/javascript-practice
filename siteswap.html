@@ -1,26 +1,37 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Juggling</title>
-		<link rel="stylesheet" href="styles.css"></link>
-	</head>
-	<body>
-		<div id = "wrapper">
-			<canvas id = "canvas" width="600" height="600"></canvas>
-			<div id = "sliders-div">
-				<h3>Settings</h3>
-				<p id = "gravity-text"></p>
-				<input id = "gravity-slider" type="range" min="1" max="10" value="3">
-				<p id = "beat-text"></p>
-				<input id = "beat-slider" type="range" min="2" max="10" value="4">
-			</div>
+
+<head>
+	<title>Juggling</title>
+	<link rel="stylesheet" href="styles.css">
+	</link>
+</head>
+
+<body>
+	<div id="wrapper">
+		<canvas id="canvas" width="600" height="600"></canvas>
+		<div id="sliders-div">
+			<h3>Settings</h3>
+			<p id="gravity-text"></p>
+			<input id="gravity-slider" type="range" min="1" max="10" value="3">
+			<p id="beat-text"></p>
+			<input id="beat-slider" type="range" min="2" max="10" value="4">
+			<br>
+			<br>
+			<input id="show-twos" type="checkbox">Show 2's as holds</input>
+			<br>
+			<input id="lh-outside" type="checkbox">LH outside throws</input>
+			<br>
+			<input id="rh-outside" type="checkbox">RH outside throws</input>
 		</div>
-		<br>
-		<p>Enter siteswap below:</p>
-		<input id = "siteswap-input" value="534"></input>
-		<button id = "siteswap-button">Go!</button>
-		<br>
-		<button id = "example-button">Show example</button>
-		<script src = "siteswap.js"></script>    
-	</body>
+	</div>
+	<br>
+	<p>Enter siteswap below:</p>
+	<input id="siteswap-input" value="534"></input>
+	<button id="siteswap-button">Go!</button>
+	<br>
+	<button id="example-button">Show example</button>
+	<script src="siteswap.js"></script>
+</body>
+
 </html>
